@@ -27,8 +27,8 @@ public class SpringBootSecurityJwtApplication {
 		spelContext.addPropertyAccessor(new PraffulAccessor());
 		PraffulHelper spel = new PraffulHelper(map);
 		spelContext.setRootObject(spel);
-		Object ans = spelExpression.getValue(spelContext, Object.class);
- 		System.out.println(ans);
+		Object ans1 = spelExpression.getValue(spelContext, Object.class);
+ 		System.out.println(ans1);
 	}
 
 }
