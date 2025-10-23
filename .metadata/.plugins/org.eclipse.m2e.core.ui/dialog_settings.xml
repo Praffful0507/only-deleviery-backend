@@ -3,7 +3,6 @@
 	<section name="MavenProjectImportWizardPage">
 		<list key="rootDirectory">
 			<item value="E:\delivery-app\bhu-backend"/>
-			<item value="E:\spring-boot-spring-security-jwt-authentication-master"/>
 		</list>
 		<list key="projectNameTemplate">
 			<item value="[artifactId]"/>

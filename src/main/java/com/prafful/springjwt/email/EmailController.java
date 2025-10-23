@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.prafful.springjwt.videoStreaming.StreamingService;
-
 import jakarta.servlet.http.HttpSession;
 import reactor.core.publisher.Mono;
 
@@ -39,12 +37,4 @@ public class EmailController {
 		return emailService.verifyOtp(otp, session);
 	}
 	
-	@Autowired
-    private StreamingService service;
-	
-	@GetMapping(value = "/video", produces = "video/mp4")
-    public Mono<Resource> getVideos() {
-        //System.out.println("range in bytes() : " + range);
-        return service.getVideo("VID_35900118_011902_893");
-    }
 }
