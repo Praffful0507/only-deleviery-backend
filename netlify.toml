@@ -1,0 +1,7 @@
+[build]
+  command = "./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install -Pproduction"
+  publish = "target"
+
+[build.environment]
+  JAVA_VERSION = "21"
+  M2_HOME = "/usr/share/maven"
