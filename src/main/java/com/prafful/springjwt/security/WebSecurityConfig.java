@@ -16,7 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 
 import com.prafful.springjwt.security.jwt.AuthEntryPointJwt;
 import com.prafful.springjwt.security.jwt.AuthTokenFilter;
@@ -88,7 +89,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 		requestHandler.setCsrfRequestAttributeName(null);
 		http.cors(cors -> cors.configurationSource(request -> {
 			var config = new org.springframework.web.cors.CorsConfiguration();
-			config.setAllowedOrigins(List.of("http://10.45.206.246:3000", "https://deleveri.netlify.app/", "https://68fb208a82c8f67b1858acf9--deleveri.netlify.app/"));
+			config.setAllowedOrigins(List.of("http://192.168.29.28:3000", "https://deleveri.netlify.app/", "https://68fb208a82c8f67b1858acf9--deleveri.netlify.app/", "http://localhost:3000"));
 			config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 			config.setAllowedHeaders(List.of("*"));
 			config.setAllowCredentials(true);
@@ -102,5 +103,16 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
+	}
+	
+	@Bean
+	public CookieSerializer cookieSerializer() {
+	    DefaultCookieSerializer serializer = new DefaultCookieSerializer();
+	    serializer.setCookieName("JSESSIONID");
+	    serializer.setUseHttpOnlyCookie(true);
+	    serializer.setUseSecureCookie(false); // Set to true in production with HTTPS
+	    serializer.setSameSite("Lax"); // or "None" if needed
+	    // Don't set domain at all, or set to null
+	    return serializer;
 	}
 }
