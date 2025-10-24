@@ -1,5 +1,5 @@
 [build]
-  command = "./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install -Pproduction"
+  command = "./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install"
   publish = "target"
 
 [build.environment]
