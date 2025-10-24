@@ -87,7 +87,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 		requestHandler.setCsrfRequestAttributeName(null);
 		http.cors(cors -> cors.configurationSource(request -> {
 			var config = new org.springframework.web.cors.CorsConfiguration();
-			config.setAllowedOrigins(List.of("https://deleveri.netlify.app/"));
+			config.setAllowedOrigins(List.of("*"));
 			config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 			config.setAllowedHeaders(List.of("*"));
 			config.setAllowCredentials(true);
