@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.prafful.springjwt.security.jwt.AuthEntryPointJwt;
 import com.prafful.springjwt.security.jwt.AuthTokenFilter;
@@ -91,6 +92,8 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 			config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 			config.setAllowedHeaders(List.of("*"));
 			config.setAllowCredentials(true);
+			UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+	        source.registerCorsConfiguration("/**", config);
 			return config;
 		})).csrf(csrf -> csrf.disable()).authorizeHttpRequests(
 				auth -> auth.requestMatchers("/api/printinvoice/**").permitAll().requestMatchers("/api/auth/**").permitAll().requestMatchers("/api/test/**").permitAll()
