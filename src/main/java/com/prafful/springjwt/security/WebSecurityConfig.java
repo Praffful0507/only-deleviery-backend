@@ -92,8 +92,6 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 			config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 			config.setAllowedHeaders(List.of("*"));
 			config.setAllowCredentials(true);
-			UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-	        source.registerCorsConfiguration("/**", config);
 			return config;
 		})).csrf(csrf -> csrf.disable()).authorizeHttpRequests(
 				auth -> auth.requestMatchers("/api/printinvoice/**").permitAll().requestMatchers("/api/auth/**").permitAll().requestMatchers("/api/test/**").permitAll()
