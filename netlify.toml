@@ -1,5 +1,5 @@
 [build]
-  command = "./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install"
+  command = sh -c "export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java)))) && ./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install -Pproduction"
   publish = "target"
 
 [build.environment]
