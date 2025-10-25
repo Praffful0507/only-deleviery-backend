@@ -1,5 +1,6 @@
 package com.prafful.springjwt.controllers;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -376,7 +378,164 @@ public class Controller {
 								 """;
 
 		// 2. Call the utility method to generate the PDF bytes
-		byte[] pdfBytes = service.generatePdfBytesFromHtml(finalHtmlContent);
+
+		String d = """
+				<!DOCTYPE html>
+				<html lang="en">
+				<head>
+				    <meta charset="UTF-8">
+				    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+				    <title>Invoice</title>
+				    <style>
+				        body {
+				            font-family: Arial, sans-serif;
+				            margin: 20px;
+				            font-size: 12px;
+				        }
+				        .invoice-container {
+				            max-width: 800px;
+				            margin: 0 auto;
+				        }
+				        .invoice-box {
+				            border: 2px solid #000;
+				            padding: 20px;
+				        }
+				        .section {
+				            margin-bottom: 15px;
+				        }
+				        .section-row {
+				            display: flex;
+				        }
+				        .section-col {
+				            flex: 1;
+				        }
+				        .space-between {
+				            justify-content: space-between;
+				        }
+				        .text-center {
+				            text-align: center;
+				        }
+				        .company-name {
+				            font-size: 18px;
+				            font-weight: bold;
+				            margin: 5px 0;
+				        }
+				        .invoice-table {
+				            width: 100%;
+				            border-collapse: collapse;
+				            margin: 15px 0;
+				        }
+				        .invoice-table th,
+				        .invoice-table td {
+				            border: 1px solid #000;
+				            padding: 8px;
+				            text-align: left;
+				        }
+				        .invoice-table th {
+				            background-color: #f0f0f0;
+				            font-weight: bold;
+				        }
+				        .border-top {
+				            border-top: 2px solid #000;
+				            padding-top: 15px;
+				            margin-top: 15px;
+				        }
+				        p {
+				            margin: 3px 0;
+				        }
+				    </style>
+				</head>
+				<body>
+				<div class="invoice-container">
+				<div class="invoice-box">
+				    <!-- To Address -->
+				    <div class="section">
+				        <div class="section-row">
+				            <div class="section-col">
+				                <p><strong>To:</strong></p>
+				                <p>{{RECEIVER_NAME}}</p>
+				                <p>{{RECEIVER_ADDRESS}}</p>
+				                <p>{{RECEIVER_CITY}}, {{RECEIVER_STATE}}, {{RECEIVER_PIN_CODE}}</p>
+				                <p>MOBILE NO: {{RECEIVER_PHONE}}</p>
+				            </div>
+				        </div>
+				    </div>
+
+				    <!-- Order Info -->
+				    <div class="section">
+				        <div class="section-row">
+				            <div class="section-col">
+				                <p><strong>Order Date:</strong> {{ORDER_DATE}}</p>
+				                <p><strong>Invoice No:</strong> {{INVOICE_NO}}</p>
+				            </div>
+				        </div>
+				    </div>
+
+				    <!-- Payment and Shipping Info -->
+				    <div class="section">
+				        <div class="section-row space-between">
+				            <div class="section-col">
+				                <p><strong>MODE:</strong> {{PAYMENT_MODE}}</p>
+				                <p><strong>AMOUNT:</strong> {{TOTAL_AMOUNT}}</p>
+				                <p>WEIGHT: {{PACKAGE_WEIGHT}}</p>
+				                <p>Dimensions (cm): {{PACKAGE_LENGTH}}*{{PACKAGE_WIDTH}}*{{PACKAGE_HEIGHT}}</p>
+				            </div>
+				            <div class="text-center">
+				                <p class="company-name">{{COMPANY_NAME}}</p>
+				                <p>{{AWB_NUMBER}}</p>
+				            </div>
+				        </div>
+				    </div>
+
+				    <!-- Table -->
+				    <table class="invoice-table">
+				        <thead>
+				            <tr>
+				                <th>SKU</th>
+				                <th>Item Name</th>
+				                <th>Qty.</th>
+				                <th>Unit Price</th>
+				                <th>Total Amount</th>
+				            </tr>
+				        </thead>
+				        <tbody>
+				            {{PRODUCT_ROWS}}
+				        </tbody>
+				    </table>
+
+				    <!-- Pickup Address -->
+				    <div class="section">
+				        <p><strong>Pickup Address:</strong></p>
+				        <p>{{PICKUP_NAME}}</p>
+				        <p>{{PICKUP_ADDRESS}}</p>
+				        <p>{{PICKUP_CITY}}, {{PICKUP_STATE}}, {{PICKUP_PIN_CODE}}</p>
+				        <p>Mobile No: {{PICKUP_PHONE}}</p>
+				    </div>
+
+				    <!-- Return Address -->
+				    <div class="section">
+				        <p><strong>Return Address:</strong></p>
+				        <p>{{RETURN_NAME}}</p>
+				        <p>{{RETURN_ADDRESS}}</p>
+				        <p>{{RETURN_CITY}}, {{RETURN_STATE}}, {{RETURN_PIN_CODE}}</p>
+				        <p>Mobile No: {{RETURN_PHONE}}</p>
+				    </div>
+
+				    <!-- Footer -->
+				    <div class="section border-top">
+				        <p>This is a computer-generated document, hence does not require a signature.</p>
+				        <p>
+				            <strong>Note:</strong> All disputes are subject to Delhi jurisdiction. Goods once
+				            sold will only be taken back or exchanged as per the store's exchange/return policy.
+				        </p>
+				    </div>
+				</div>
+				</div>
+				</body>
+				</html>
+				""";
+
+		byte[] pdfBytes = service.generatePdfBytesFromHtml(d, orderID);
 
 		// --- Setting HTTP Headers for Download ---
 
@@ -395,5 +554,35 @@ public class Controller {
 
 		// 3. Return the response entity containing the PDF bytes and headers
 		return ResponseEntity.ok().headers(headers).body(pdfBytes);
+	}
+
+	@GetMapping("/bulkOrderUpload/download-excel")
+	@CrossOrigin(origins = "*")
+	public ResponseEntity<byte[]> downloadExcel() throws IOException {
+		byte[] pdfBytes = service.downloadBulkExcel();
+
+		// --- Setting HTTP Headers for Download ---
+
+		// a. Set the file type to 'application/pdf'
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_PDF);
+
+		// b. Set the Content-Disposition header.
+		// 'attachment' tells the browser to download the file.
+		// 'filename' provides the suggested name for the downloaded file.
+		String filename = "shipping_label_843987.pdf";
+		headers.setContentDispositionFormData("attachment", filename);
+
+		// c. Set the content size (optional but recommended)
+		headers.setContentLength(pdfBytes.length);
+
+		// 3. Return the response entity containing the PDF bytes and headers
+		return ResponseEntity.ok().headers(headers).body(pdfBytes);
+
+	}
+
+	@PostMapping("/bulkOrderUpload/upload")
+	public void uploadOrder(@RequestParam("file") MultipartFile file) throws Exception {
+		service.uploadOrder(file);
 	}
 }

@@ -140,6 +140,11 @@
 			<artifactId>html2pdf</artifactId>
 			<version>5.0.3</version>
 		</dependency>
+		<dependency>
+			<groupId>com.aspose</groupId>
+			<artifactId>aspose-cells</artifactId>
+			<version>8.6.3</version>
+		</dependency>
 	</dependencies>
 
 	<build>

@@ -1,13 +1,25 @@
 package com.prafful.springjwt.service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.aspose.cells.Cell;
+import com.aspose.cells.CellValueType;
+import com.aspose.cells.Cells;
+import com.aspose.cells.Workbook;
+import com.aspose.cells.Worksheet;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -17,8 +29,14 @@ import com.prafful.springjwt.models.BankDetails;
 import com.prafful.springjwt.models.BillingInfo;
 import com.prafful.springjwt.models.DocumentDetails;
 import com.prafful.springjwt.models.Order;
+import com.prafful.springjwt.models.PackageDetails;
+import com.prafful.springjwt.models.PaymentDetails;
+import com.prafful.springjwt.models.PickUpAddress;
+import com.prafful.springjwt.models.ProductDetail;
+import com.prafful.springjwt.models.ReceiverAddress;
 import com.prafful.springjwt.models.User;
 import com.prafful.springjwt.models.UserMultipleAdress;
+import com.prafful.springjwt.models.VolumetricWeight;
 import com.prafful.springjwt.repository.AadharDetailsRepository;
 import com.prafful.springjwt.repository.BankDetailsRepository;
 import com.prafful.springjwt.repository.BillinfoRepository;
@@ -421,14 +439,195 @@ public class Servicess {
 		return orders;
 	}
 
-	public byte[] generatePdfBytesFromHtml(String finalHtmlContent) {
+	public byte[] generatePdfBytesFromHtml(String finalHtmlContent, Long orderID) {
 		// A ByteArrayOutputStream holds the PDF data in memory temporarily.
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        
-        // HtmlConverter writes the generated PDF content into the output stream
-        HtmlConverter.convertToPdf(finalHtmlContent, outputStream);
-        
-        // Convert the stream content to a byte array and return it
-        return outputStream.toByteArray();
+		Order order = orderRepository.findById(orderID).get();
+		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_NAME}}", order.getReceiverAddress().getContactName());
+		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_ADDRESS}}", order.getReceiverAddress().getAddress());
+		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_CITY}}", order.getReceiverAddress().getCity());
+		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_STATE}}", order.getReceiverAddress().getState());
+		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_PIN_CODE}}", order.getReceiverAddress().getPinCode());
+		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_PHONE}}", order.getReceiverAddress().getPhoneNumber());
+
+		finalHtmlContent = finalHtmlContent.replace("{{ORDER_DATE}}", String.valueOf(order.getCreatedAt()));
+		finalHtmlContent = finalHtmlContent.replace("{{INVOICE_NO}}", String.valueOf(order.getOrderId()));
+
+		// Replace payment and shipping info
+		finalHtmlContent = finalHtmlContent.replace("{{PAYMENT_MODE}}", order.getPaymentDetails().getName());
+		finalHtmlContent = finalHtmlContent.replace("{{TOTAL_AMOUNT}}", String.valueOf(order.getTotalFreightCharges()));
+		finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_WEIGHT}}", String.valueOf(order.getPackageDetails().getDeadWeight()));
+		finalHtmlContent = finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_LENGTH}}", String.valueOf(Optional
+				.ofNullable(order.getPackageDetails()).map(pd -> pd.getVolumetricWeight()).map(vw -> vw.getLength())));
+
+		finalHtmlContent = finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_WIDTH}}", String.valueOf(Optional
+				.ofNullable(order.getPackageDetails()).map(pd -> pd.getVolumetricWeight()).map(vw -> vw.getWidth())));
+
+		finalHtmlContent = finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_HEIGHT}}", String.valueOf(Optional
+				.ofNullable(order.getPackageDetails()).map(pd -> pd.getVolumetricWeight()).map(vw -> vw.getHeight())));
+		
+		finalHtmlContent = finalHtmlContent.replace("{{COMPANY_NAME}}", "Delevery GLOBAL INDIA");
+		finalHtmlContent = finalHtmlContent.replace("{{AWB_NUMBER}}", order.getAwbNumber() != null ? order.getAwbNumber() : "");
+
+		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_NAME}}", order.getPickupAddress().getContactName());
+		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_ADDRESS}}", order.getPickupAddress().getAddress());
+		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_CITY}}", order.getPickupAddress().getCity());
+		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_STATE}}", order.getPickupAddress().getState());
+		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_PIN_CODE}}", order.getPickupAddress().getPinCode());
+		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_PHONE}}", order.getPickupAddress().getPhoneNumber());
+
+		// Replace return address (using pickup address as return address)
+		finalHtmlContent = finalHtmlContent.replace("{{RETURN_NAME}}", order.getPickupAddress().getContactName());
+		finalHtmlContent = finalHtmlContent.replace("{{RETURN_ADDRESS}}", order.getPickupAddress().getAddress());
+		finalHtmlContent = finalHtmlContent.replace("{{RETURN_CITY}}", order.getPickupAddress().getCity());
+		finalHtmlContent = finalHtmlContent.replace("{{RETURN_STATE}}", order.getPickupAddress().getState());
+		finalHtmlContent = finalHtmlContent.replace("{{RETURN_PIN_CODE}}", order.getPickupAddress().getPinCode());
+		finalHtmlContent = finalHtmlContent.replace("{{RETURN_PHONE}}", order.getPickupAddress().getPhoneNumber());
+
+		String productRows = generateProductRows(order.getProductDetails());
+		finalHtmlContent = finalHtmlContent.replace("{{PRODUCT_ROWS}}", productRows);
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+		// HtmlConverter writes the generated PDF content into the output stream
+		HtmlConverter.convertToPdf(finalHtmlContent, outputStream);
+
+		// Convert the stream content to a byte array and return it
+		return outputStream.toByteArray();
+	}
+
+	private String generateProductRows(List<ProductDetail> products) {
+		StringBuilder rows = new StringBuilder();
+		for (ProductDetail product : products) {
+			double totalAmount = product.getQuantity() * Double.parseDouble(product.getUnitPrice());
+			rows.append("<tr>").append("<td>").append(product.getSku()).append("</td>").append("<td>")
+					.append(product.getName()).append("</td>").append("<td>").append(product.getQuantity())
+					.append("</td>").append("<td>").append(product.getUnitPrice()).append("</td>").append("<td>")
+					.append(String.format("%.2f", totalAmount)).append("</td>").append("</tr>");
+		}
+		return rows.toString();
+	}
+
+	public byte[] downloadBulkExcel() throws IOException {
+		// URL url = getClass().getClassLoader().getResource("/pdf/djdj.pdf");
+		Resource resource = new ClassPathResource("/pdf/Bulk_Order_Sample_Formate.xlsx");
+		// Convert the stream content to a byte array and return it
+		return resource.getContentAsByteArray();
+	}
+
+	public void uploadOrder(MultipartFile file) throws Exception {
+		List<Order> orders = new ArrayList<>();
+		try (InputStream inputStream = file.getInputStream()) {
+			Workbook workbook = new Workbook(inputStream);
+			Worksheet worksheet = workbook.getWorksheets().get("Sample Bulk Order");
+			Cells cells = worksheet.getCells();
+
+			List<UserMultipleAdress> addresss = userMultipleAdressRepository.findAllByEmail(SecurityUtils.getEmailId());
+
+			int maxRow = cells.getMaxDataRow();
+			for (int row = 1; row <= maxRow; row++) {
+				Order order = new Order();
+
+				// Set basic order info
+				order.setUserId(SecurityUtils.getEmailId());
+				order.setCreatedAt(new Date());
+				order.setUpdatedAt(new Date());
+				order.setStatus("PENDING");
+				PickUpAddress pickupAddress = new PickUpAddress(addresss.get(0));
+				order.setPickupAddress(pickupAddress);
+				// Receiver Address (columns 0-7)
+				ReceiverAddress receiverAddress = new ReceiverAddress();
+				receiverAddress.setContactName(getCellValue(cells, row, 0));
+				receiverAddress.setEmail(getCellValue(cells, row, 1));
+				receiverAddress.setPhoneNumber(getCellValue(cells, row, 2));
+				receiverAddress.setAddress(getCellValue(cells, row, 3));
+				receiverAddress.setPinCode(getCellValue(cells, row, 4));
+				receiverAddress.setCity(getCellValue(cells, row, 5));
+				receiverAddress.setState(getCellValue(cells, row, 6));
+				order.setReceiverAddress(receiverAddress);
+
+				PackageDetails packageDetails = new PackageDetails();
+				packageDetails.setDeadWeight(parseDouble(getCellValue(cells, row, 7)));
+				VolumetricWeight weight = new VolumetricWeight();
+				weight.setLength(parseInt(getCellValue(cells, row, 8)));
+				weight.setWidth(parseInt(getCellValue(cells, row, 9)));
+				weight.setHeight(parseInt(getCellValue(cells, row, 10)));
+				order.setPackageDetails(packageDetails);
+
+				// Product Details
+				List<ProductDetail> productDetails = new ArrayList<>();
+
+				// Product 1 (columns 11-14) - Required
+				ProductDetail product1 = new ProductDetail();
+				product1.setName(getCellValue(cells, row, 11));
+				product1.setSku(getCellValue(cells, row, 12));
+				product1.setQuantity(parseInt(getCellValue(cells, row, 13)));
+				product1.setUnitPrice(getCellValue(cells, row, 14));
+				productDetails.add(product1);
+
+				String product2Name = getCellValue(cells, row, 15);
+				if (product2Name != null && !product2Name.trim().isEmpty()) {
+					ProductDetail product2 = new ProductDetail();
+					product2.setName(product2Name);
+					product2.setSku(getCellValue(cells, row, 16));
+					product2.setQuantity(parseInt(getCellValue(cells, row, 17)));
+					product2.setUnitPrice(getCellValue(cells, row, 18));
+					productDetails.add(product2);
+				}
+
+				String product3Name = getCellValue(cells, row, 19);
+				if (product3Name != null && !product3Name.trim().isEmpty()) {
+					ProductDetail product3 = new ProductDetail();
+					product3.setName(product3Name);
+					product3.setSku(getCellValue(cells, row, 20));
+					product3.setQuantity(parseInt(getCellValue(cells, row, 21)));
+					product3.setUnitPrice(getCellValue(cells, row, 22));
+					productDetails.add(product3);
+				}
+
+				order.setProductDetails(productDetails);
+
+				// Payment Details (Method - column 23)
+				PaymentDetails paymentDetails = new PaymentDetails();
+				String method = getCellValue(cells, row, 23);
+				paymentDetails.setName(method); // COD or Prepaid
+				order.setPaymentDetails(paymentDetails);
+
+				orders.add(order);
+			}
+			orderRepository.saveAll(orders);
+		}
+	}
+
+	private String getCellValue(Cells cells, int row, int column) {
+		try {
+			Cell cell = cells.get(row, column);
+			if (cell == null || cell.getType() == CellValueType.IS_NULL) {
+				return null;
+			}
+			return cell.getStringValue().trim();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	private int parseInt(String value) {
+		try {
+			if (value == null || value.trim().isEmpty()) {
+				return 0;
+			}
+			return Integer.parseInt(value.trim());
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
+
+	private double parseDouble(String value) {
+		try {
+			if (value == null || value.trim().isEmpty()) {
+				return 0.0;
+			}
+			return Double.parseDouble(value.trim());
+		} catch (NumberFormatException e) {
+			return 0.0;
+		}
 	}
 }

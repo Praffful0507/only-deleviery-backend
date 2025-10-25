@@ -2,11 +2,25 @@ package com.prafful.springjwt.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Embeddable
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class PickUpAddress {
+
+	public PickUpAddress(UserMultipleAdress userMultipleAdress) {
+		this.contactName = userMultipleAdress.getContactName();
+		this.email = userMultipleAdress.getEmail();
+		this.phoneNumber = userMultipleAdress.getPhoneNumber();
+		this.address = userMultipleAdress.getAddress();
+		this.city = userMultipleAdress.getCity();
+		this.state = userMultipleAdress.getState();
+		this.pinCode = userMultipleAdress.getPinCode();
+	}
 
 	@Column(name = "PICKUP_CONTACT_NAME")
 	private String contactName;
