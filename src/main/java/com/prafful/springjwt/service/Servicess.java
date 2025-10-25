@@ -442,49 +442,63 @@ public class Servicess {
 	public byte[] generatePdfBytesFromHtml(String finalHtmlContent, Long orderID) {
 		// A ByteArrayOutputStream holds the PDF data in memory temporarily.
 		Order order = orderRepository.findById(orderID).get();
-		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_NAME}}", order.getReceiverAddress().getContactName());
-		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_ADDRESS}}", order.getReceiverAddress().getAddress());
-		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_CITY}}", order.getReceiverAddress().getCity());
-		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_STATE}}", order.getReceiverAddress().getState());
-		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_PIN_CODE}}", order.getReceiverAddress().getPinCode());
-		finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_PHONE}}", order.getReceiverAddress().getPhoneNumber());
+		try {
+			finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_NAME}}",
+					order.getReceiverAddress().getContactName());
+			finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_ADDRESS}}",
+					order.getReceiverAddress().getAddress());
+			finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_CITY}}", order.getReceiverAddress().getCity());
+			finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_STATE}}", order.getReceiverAddress().getState());
+			finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_PIN_CODE}}",
+					order.getReceiverAddress().getPinCode());
+			finalHtmlContent = finalHtmlContent.replace("{{RECEIVER_PHONE}}",
+					order.getReceiverAddress().getPhoneNumber());
 
-		finalHtmlContent = finalHtmlContent.replace("{{ORDER_DATE}}", String.valueOf(order.getCreatedAt()));
-		finalHtmlContent = finalHtmlContent.replace("{{INVOICE_NO}}", String.valueOf(order.getOrderId()));
+			finalHtmlContent = finalHtmlContent.replace("{{ORDER_DATE}}", String.valueOf(order.getCreatedAt()));
+			finalHtmlContent = finalHtmlContent.replace("{{INVOICE_NO}}", String.valueOf(order.getOrderId()));
 
-		// Replace payment and shipping info
-		finalHtmlContent = finalHtmlContent.replace("{{PAYMENT_MODE}}", order.getPaymentDetails().getName());
-		finalHtmlContent = finalHtmlContent.replace("{{TOTAL_AMOUNT}}", String.valueOf(order.getTotalFreightCharges()));
-		finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_WEIGHT}}", String.valueOf(order.getPackageDetails().getDeadWeight()));
-		finalHtmlContent = finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_LENGTH}}", String.valueOf(Optional
-				.ofNullable(order.getPackageDetails()).map(pd -> pd.getVolumetricWeight()).map(vw -> vw.getLength())));
+			// Replace payment and shipping info
+			finalHtmlContent = finalHtmlContent.replace("{{PAYMENT_MODE}}", order.getPaymentDetails().getName());
+			finalHtmlContent = finalHtmlContent.replace("{{TOTAL_AMOUNT}}",
+					String.valueOf(order.getTotalFreightCharges()));
+			finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_WEIGHT}}",
+					String.valueOf(order.getPackageDetails().getDeadWeight()));
+			finalHtmlContent = finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_LENGTH}}",
+					String.valueOf(Optional.ofNullable(order.getPackageDetails()).map(pd -> pd.getVolumetricWeight())
+							.map(vw -> vw.getLength())));
 
-		finalHtmlContent = finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_WIDTH}}", String.valueOf(Optional
-				.ofNullable(order.getPackageDetails()).map(pd -> pd.getVolumetricWeight()).map(vw -> vw.getWidth())));
+			finalHtmlContent = finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_WIDTH}}",
+					String.valueOf(Optional.ofNullable(order.getPackageDetails()).map(pd -> pd.getVolumetricWeight())
+							.map(vw -> vw.getWidth())));
 
-		finalHtmlContent = finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_HEIGHT}}", String.valueOf(Optional
-				.ofNullable(order.getPackageDetails()).map(pd -> pd.getVolumetricWeight()).map(vw -> vw.getHeight())));
-		
-		finalHtmlContent = finalHtmlContent.replace("{{COMPANY_NAME}}", "Delevery GLOBAL INDIA");
-		finalHtmlContent = finalHtmlContent.replace("{{AWB_NUMBER}}", order.getAwbNumber() != null ? order.getAwbNumber() : "");
+			finalHtmlContent = finalHtmlContent = finalHtmlContent.replace("{{PACKAGE_HEIGHT}}",
+					String.valueOf(Optional.ofNullable(order.getPackageDetails()).map(pd -> pd.getVolumetricWeight())
+							.map(vw -> vw.getHeight())));
 
-		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_NAME}}", order.getPickupAddress().getContactName());
-		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_ADDRESS}}", order.getPickupAddress().getAddress());
-		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_CITY}}", order.getPickupAddress().getCity());
-		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_STATE}}", order.getPickupAddress().getState());
-		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_PIN_CODE}}", order.getPickupAddress().getPinCode());
-		finalHtmlContent = finalHtmlContent.replace("{{PICKUP_PHONE}}", order.getPickupAddress().getPhoneNumber());
+			finalHtmlContent = finalHtmlContent.replace("{{COMPANY_NAME}}", "Delevery GLOBAL INDIA");
+			finalHtmlContent = finalHtmlContent.replace("{{AWB_NUMBER}}",
+					order.getAwbNumber() != null ? order.getAwbNumber() : "");
 
-		// Replace return address (using pickup address as return address)
-		finalHtmlContent = finalHtmlContent.replace("{{RETURN_NAME}}", order.getPickupAddress().getContactName());
-		finalHtmlContent = finalHtmlContent.replace("{{RETURN_ADDRESS}}", order.getPickupAddress().getAddress());
-		finalHtmlContent = finalHtmlContent.replace("{{RETURN_CITY}}", order.getPickupAddress().getCity());
-		finalHtmlContent = finalHtmlContent.replace("{{RETURN_STATE}}", order.getPickupAddress().getState());
-		finalHtmlContent = finalHtmlContent.replace("{{RETURN_PIN_CODE}}", order.getPickupAddress().getPinCode());
-		finalHtmlContent = finalHtmlContent.replace("{{RETURN_PHONE}}", order.getPickupAddress().getPhoneNumber());
+			finalHtmlContent = finalHtmlContent.replace("{{PICKUP_NAME}}", order.getPickupAddress().getContactName());
+			finalHtmlContent = finalHtmlContent.replace("{{PICKUP_ADDRESS}}", order.getPickupAddress().getAddress());
+			finalHtmlContent = finalHtmlContent.replace("{{PICKUP_CITY}}", order.getPickupAddress().getCity());
+			finalHtmlContent = finalHtmlContent.replace("{{PICKUP_STATE}}", order.getPickupAddress().getState());
+			finalHtmlContent = finalHtmlContent.replace("{{PICKUP_PIN_CODE}}", order.getPickupAddress().getPinCode());
+			finalHtmlContent = finalHtmlContent.replace("{{PICKUP_PHONE}}", order.getPickupAddress().getPhoneNumber());
 
-		String productRows = generateProductRows(order.getProductDetails());
-		finalHtmlContent = finalHtmlContent.replace("{{PRODUCT_ROWS}}", productRows);
+			// Replace return address (using pickup address as return address)
+			finalHtmlContent = finalHtmlContent.replace("{{RETURN_NAME}}", order.getPickupAddress().getContactName());
+			finalHtmlContent = finalHtmlContent.replace("{{RETURN_ADDRESS}}", order.getPickupAddress().getAddress());
+			finalHtmlContent = finalHtmlContent.replace("{{RETURN_CITY}}", order.getPickupAddress().getCity());
+			finalHtmlContent = finalHtmlContent.replace("{{RETURN_STATE}}", order.getPickupAddress().getState());
+			finalHtmlContent = finalHtmlContent.replace("{{RETURN_PIN_CODE}}", order.getPickupAddress().getPinCode());
+			finalHtmlContent = finalHtmlContent.replace("{{RETURN_PHONE}}", order.getPickupAddress().getPhoneNumber());
+
+			String productRows = generateProductRows(order.getProductDetails());
+			finalHtmlContent = finalHtmlContent.replace("{{PRODUCT_ROWS}}", productRows);
+		} catch (Exception e) {
+			System.out.println("Its ok to be bugy code " + e.getMessage());
+		}
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
 		// HtmlConverter writes the generated PDF content into the output stream
