@@ -10,7 +10,7 @@ import jakarta.persistence.Transient;
 import lombok.Data;
 
 @Entity
-@Table(name = "USER")
+@Table(name = "USER_ID")
 @Data
 public class User {
 
